@@ -11,6 +11,7 @@ function App() {
     isSignedIn: false,
     name: '',
     email: '',
+    password: '',
     photoURL: ''
   })
 
@@ -52,19 +53,38 @@ function App() {
   }
 
   const handleBlur = (e) => {
-    console.log(e.target.name ,e.target.value);
+    let isFieldValid = true;
     if(e.target.name === 'email'){
-      const isEmailValid = /\S+@\S+\.\S+/.test(e.target.value);
-      console.log(isEmailValid);
+      isFieldValid = /\S+@\S+\.\S+/.test(e.target.value);
     }
     if (e.target.name === 'password') {
-      const isPasswordValid = e.target.length > 6;
+      const isPasswordValid = e.target.value.length > 6;
       const passwordHasNumber = /\d{1}/.test(e.target.value);
-      console.log(isPasswordValid && passwordHasNumber);
+      isFieldValid = isPasswordValid && passwordHasNumber;
+    }
+    if (isFieldValid) {
+      const newUserInfo = {...user};
+      newUserInfo[e.target.name] = e.target.value;
+      setUser(newUserInfo);
     }
   }
-  const handleSubmit = () => {
-
+  const handleSubmit = (e) => {
+    console.log(user.name, user.password);
+    if(user.name && user.password){
+      firebase.auth().createUserWithEmailAndPassword(user.email, user.password)
+  .then((userCredential) => {
+    // Signed in 
+    var user = userCredential.user;
+    // ...
+  })
+  .catch((error) => {
+    var errorCode = error.code;
+    var errorMessage = error.message;
+    console.log(errorCode, errorMessage);
+    // ..
+  });
+    }
+    e.preventDefault();
   }
 
   return (
@@ -84,7 +104,10 @@ function App() {
       }
 
       <h1>Our own Authentication</h1>
+      
       <form onSubmit={handleSubmit}>
+        <input type="text" onBlur={handleBlur} name="name" placeholder="Your Name"/>
+        <br/>
         <input type="text" onBlur={handleBlur} name="email" placeholder="Your Email Address" required/>
         <br/>
         <input type="password" onBlur={handleBlur} name="password" placeholder="Your Password" required/>
